@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Doğruluk mu Cesaret mi? - Ana Sayfa{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title text-center mb-0">Yeni Oyun Oluştur</h4>
+            </div>
+            <div class="card-body p-5">
+                <form id="create-game-form">
+                    <div class="mb-3">
+                        <label for="player-name" class="form-label">Adınız</label>
+                        <input type="text" class="form-control" id="player-name" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="player-count" class="form-label">Oyuncu Sayısı (2-50)</label>
+                        <input type="number" class="form-control" id="player-count" min="2" max="50" value="4" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-gamepad me-2"></i>Oyun Oluştur
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4 shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title text-center mb-0">Nasıl Oynanır?</h4>
+            </div>
+            <div class="card-body p-4">
+                <ol class="mt-3">
+                    <li class="mb-2">Oyun oluştur butonuna tıklayın</li>
+                    <li class="mb-2">Oluşturulan bağlantıyı arkadaşlarınızla paylaşın</li>
+                    <li class="mb-2">Tüm oyuncular katıldığında oyunu başlatın</li>
+                    <li class="mb-2">Sıra size geldiğinde "Doğruluk" veya "Cesaret" seçin</li>
+                    <li class="mb-2">Soruyu cevaplayın veya görevi tamamlayın</li>
+                    <li>Eğlenceye devam edin!</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="share-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Oyun Bağlantısı</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Aşağıdaki bağlantıyı arkadaşlarınızla paylaşın:</p>
+                <div class="input-group mb-3">
+                    <input type="text" id="game-url" class="form-control" readonly>
+                    <button class="btn btn-outline-primary" type="button" id="copy-url">
+                        <i class="fas fa-copy me-1"></i>Kopyala
+                    </button>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="#" id="join-game-btn" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-1"></i>Oyuna Katıl
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const createGameForm = document.getElementById('create-game-form');
+        const shareModal = new bootstrap.Modal(document.getElementById('share-modal'));
+        const gameUrlInput = document.getElementById('game-url');
+        const copyUrlBtn = document.getElementById('copy-url');
+        const joinGameBtn = document.getElementById('join-game-btn');
+        
+        createGameForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const playerName = document.getElementById('player-name').value;
+            const playerCount = document.getElementById('player-count').value;
+            
+            // Create game via AJAX
+            fetch('/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'player_name': playerName,
+                    'player_count': playerCount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.game_id) {
+                    // Set the game URL
+                    const gameUrl = window.location.origin + data.join_url;
+                    gameUrlInput.value = gameUrl;
+                    joinGameBtn.href = data.join_url + '/game';
+                    
+                    // Show the modal
+                    shareModal.show();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Oyun oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+            });
+        });
+        
+        // Copy URL button
+        copyUrlBtn.addEventListener('click', function() {
+            gameUrlInput.select();
+            document.execCommand('copy');
+            
+            // Change button text temporarily
+            const originalText = copyUrlBtn.innerHTML;
+            copyUrlBtn.innerHTML = '<i class="fas fa-check me-1"></i>Kopyalandı!';
+            setTimeout(() => {
+                copyUrlBtn.innerHTML = originalText;
+            }, 2000);
+        });
+    });
+</script>
+{% endblock %} 

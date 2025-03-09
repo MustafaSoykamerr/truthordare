@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Doğruluk mu Cesaret mi? - Oyuna Katıl{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title text-center mb-0">Oyuna Katıl</h4>
+            </div>
+            <div class="card-body p-5">
+                <form id="join-game-form">
+                    <div class="mb-4">
+                        <label for="player-name" class="form-label">Adınız</label>
+                        <input type="text" class="form-control" id="player-name" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Oyuna Katıl
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="/" class="btn btn-link">
+                        <i class="fas fa-arrow-left me-1"></i>Ana Sayfaya Dön
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const joinGameForm = document.getElementById('join-game-form');
+        const gameId = window.location.pathname.split('/').pop();
+        
+        joinGameForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const playerName = document.getElementById('player-name').value;
+            
+            // Join game via AJAX
+            fetch(`/tod/${gameId}/join`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'player_name': playerName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to game page
+                    window.location.href = `/tod/${gameId}/game`;
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Oyuna katılırken bir hata oluştu. Lütfen tekrar deneyin.');
+            });
+        });
+    });
+</script>
+{% endblock %} 

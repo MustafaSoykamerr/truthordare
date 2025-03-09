@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "HYPERINGS DEV - Dogruluk mu Cesaret mi?"
+echo "====================================="
+echo "Ngrok ile uygulama başlatılıyor..."
+echo ""
+echo "NOT: Eğer ngrok hatası alıyorsanız, aşağıdaki seçenekleri deneyebilirsiniz:"
+echo "1. Çalışan diğer ngrok oturumlarını kapatın"
+echo "2. Alternatif yöntem kullanın:"
+echo "   a) İlk önce ngrok'u başlatın: ngrok http 5000"
+echo "   b) Sonra başka bir terminal penceresinde uygulamayı çalıştırın: python app.py"
+echo "3. Ngrok yapılandırma dosyası kullanın:"
+echo "   a) ngrok.yml dosyasını düzenleyip auth token'ınızı ekleyin"
+echo "   b) ngrok start --all --config=ngrok.yml"
+echo "   c) Başka bir terminal penceresinde: python app.py"
+echo "4. Uygulamayı ngrok olmadan çalıştırın: ./run.sh"
+echo ""
+python app.py --ngrok 

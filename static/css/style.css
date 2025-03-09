@@ -1,0 +1,284 @@
+/* Global Styles */
+:root {
+    /* HYPERINGS DEV Color Palette */
+    --primary: #2c3e50;
+    --primary-light: #34495e;
+    --secondary: #16a085;
+    --secondary-light: #1abc9c;
+    --accent: #e74c3c;
+    --accent-light: #f39c12;
+    --dark: #1a1a2e;
+    --light: #f5f5f5;
+    --white: #ffffff;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light);
+    color: var(--gray-800);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    flex: 1;
+}
+
+/* Header Styles */
+.site-title {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 2.5rem;
+    margin-bottom: 0;
+}
+
+.hyperings-brand {
+    font-size: 1rem;
+    color: var(--secondary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background-color: var(--white);
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+.card-header.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+.card:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-light);
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.btn-success:hover {
+    background-color: var(--secondary-light);
+    border-color: var(--secondary-light);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-danger:hover {
+    background-color: var(--accent-light);
+    border-color: var(--accent-light);
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+}
+
+/* Form Styles */
+.form-control {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-300);
+    background-color: var(--white);
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(44, 62, 80, 0.25);
+    border-color: var(--primary-light);
+}
+
+/* Footer Styles */
+footer {
+    margin-top: auto;
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    background-color: var(--white);
+    padding: 1rem 0;
+    border-top: 1px solid var(--gray-200);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .site-title {
+        font-size: 2rem;
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+}
+
+/* Animation Styles */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Custom Game Styles */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+.bg-danger {
+    background-color: var(--accent) !important;
+}
+
+.bg-warning {
+    background-color: var(--accent-light) !important;
+    color: var(--dark);
+}
+
+.bg-success {
+    background-color: var(--secondary) !important;
+}
+
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-danger {
+    color: var(--accent) !important;
+}
+
+.text-warning {
+    color: var(--accent-light) !important;
+}
+
+.text-success {
+    color: var(--secondary) !important;
+}
+
+.truth-btn {
+    background-color: var(--primary);
+}
+
+.dare-btn {
+    background-color: var(--accent);
+}
+
+.player-item {
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background-color: var(--gray-100);
+    border-left: 4px solid var(--gray-300);
+    position: relative;
+}
+
+.player-item.current {
+    border-left-color: var(--primary);
+    background-color: rgba(44, 62, 80, 0.1);
+}
+
+.player-item.disconnected {
+    opacity: 0.6;
+}
+
+.ready-badge {
+    font-size: 0.7rem !important;
+    padding: 0.2em 0.5em !important;
+    margin-left: 5px;
+    background-color: var(--secondary) !important;
+    color: var(--white) !important;
+    border-radius: 4px;
+    display: inline-block;
+    position: relative;
+    top: -1px;
+}
+
+/* Game Log Styles */
+.game-log {
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 8px;
+    background-color: var(--gray-100);
+    padding: 0.5rem;
+}
+
+.game-log .border-bottom {
+    border-bottom: 1px solid var(--gray-300) !important;
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-100);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gray-500);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-600);
+} 

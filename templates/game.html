@@ -1,0 +1,577 @@
+{% extends "base.html" %}
+
+{% block title %}Doğruluk mu Cesaret mi? - Oyun{% endblock %}
+
+{% block extra_css %}
+<style>
+    .player-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .player-item {
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #dee2e6;
+    }
+    
+    .player-item.current {
+        border-left-color: #0d6efd;
+        background-color: #e7f1ff;
+    }
+    
+    .player-item.disconnected {
+        opacity: 0.6;
+    }
+    
+    .game-controls {
+        transition: all 0.3s ease;
+    }
+    
+    .choice-btn {
+        min-width: 120px;
+        transition: all 0.2s ease;
+    }
+    
+    .choice-btn:hover {
+        transform: translateY(-3px);
+    }
+    
+    .truth-btn {
+        background-color: #0d6efd;
+    }
+    
+    .dare-btn {
+        background-color: #dc3545;
+    }
+    
+    .question-card {
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .question-text {
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+    
+    .question-type-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .game-log {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .share-link {
+        word-break: break-all;
+    }
+    
+    .ready-badge {
+        font-size: 0.7rem;
+        padding: 0.2em 0.5em;
+        margin-left: 5px;
+        background-color: var(--secondary);
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .choice-btn {
+            min-width: 100px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Game Info and Player List -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Oyun Bilgisi</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Oyun ID:</strong> <span id="game-id">{{ game_id }}</span></p>
+                <p class="mb-1"><strong>Oyuncu Sayısı:</strong> <span id="player-count">0</span>/<span id="max-players">0</span></p>
+                <p class="mb-1"><strong>Hazır Oyuncular:</strong> <span id="ready-players">0</span>/<span id="total-players">0</span></p>
+                <p class="mb-0"><strong>Durum:</strong> <span id="game-status">Bekleniyor</span></p>
+                
+                <hr>
+                
+                <div class="d-grid gap-2" id="host-controls" style="display: none;">
+                    <button id="start-game-btn" class="btn btn-success">Oyunu Başlat</button>
+                    <p class="text-muted small mt-1">Oyunu başlatmak için en az 2 oyuncu gerekiyor.</p>
+                </div>
+                
+                <div class="mt-3">
+                    <p class="mb-2"><strong>Bağlantıyı Paylaş:</strong></p>
+                    <div class="input-group mb-2">
+                        <input type="text" id="share-url" class="form-control form-control-sm" readonly>
+                        <button class="btn btn-outline-primary btn-sm" type="button" id="copy-url">Kopyala</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Oyuncular</h5>
+            </div>
+            <div class="card-body p-2">
+                <div id="player-list" class="player-list">
+                    <!-- Players will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Area -->
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Oyun Alanı</h5>
+            </div>
+            <div class="card-body p-4">
+                <!-- Waiting for game to start -->
+                <div id="waiting-screen" class="text-center py-5">
+                    <h3 class="mb-4">Oyun Başlaması Bekleniyor</h3>
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <p class="mt-3">Oyun başlatıldığında burada görünecek...</p>
+                    <p class="text-muted">Tüm oyuncuların hazır olması gerekiyor.</p>
+                </div>
+                
+                <!-- Your turn - choose truth or dare -->
+                <div id="choose-type-screen" class="text-center py-4" style="display: none;">
+                    <h3 class="mb-4">Sıra Sende!</h3>
+                    <p class="mb-4">Doğruluk mu Cesaret mi?</p>
+                    
+                    <div class="d-flex justify-content-center gap-3">
+                        <button id="truth-btn" class="btn btn-lg truth-btn text-white choice-btn">Doğruluk</button>
+                        <button id="dare-btn" class="btn btn-lg dare-btn text-white choice-btn">Cesaret</button>
+                    </div>
+                </div>
+                
+                <!-- Question/Dare display -->
+                <div id="question-screen" class="text-center py-4" style="display: none;">
+                    <div class="card question-card position-relative mb-4">
+                        <span id="question-type-badge" class="badge question-type-badge">Doğruluk</span>
+                        <div class="card-body">
+                            <p id="question-text" class="question-text"></p>
+                        </div>
+                    </div>
+                    
+                    <div id="my-turn-controls" style="display: none;">
+                        <div class="d-flex justify-content-center gap-3">
+                            <button id="complete-btn" class="btn btn-success">Tamamladım</button>
+                            <button id="skip-btn" class="btn btn-secondary">Pas Geç</button>
+                        </div>
+                    </div>
+                    
+                    <div id="other-turn-info" style="display: none;">
+                        <p class="mb-0">Oyuncu cevap veriyor...</p>
+                    </div>
+                </div>
+                
+                <!-- Waiting for other player's turn -->
+                <div id="waiting-turn-screen" class="text-center py-4" style="display: none;">
+                    <h4 class="mb-3">Sıra <span id="current-player-name">diğer oyuncuda</span></h4>
+                    <p>Lütfen bekleyin...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Log -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Oyun Geçmişi</h5>
+            </div>
+            <div class="card-body p-2">
+                <div id="game-log" class="game-log">
+                    <div class="text-center text-muted py-3">
+                        <p class="mb-0">Oyun başladığında burada geçmiş görünecek...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Game variables
+        const gameId = '{{ game_id }}';
+        const playerId = '{{ player_id }}';
+        let isMyTurn = false;
+        let isHost = false;
+        let gameStarted = false;
+        let currentQuestion = null;
+        let currentQuestionType = null;
+        
+        // DOM elements
+        const playerListEl = document.getElementById('player-list');
+        const playerCountEl = document.getElementById('player-count');
+        const maxPlayersEl = document.getElementById('max-players');
+        const readyPlayersEl = document.getElementById('ready-players');
+        const totalPlayersEl = document.getElementById('total-players');
+        const gameStatusEl = document.getElementById('game-status');
+        const hostControlsEl = document.getElementById('host-controls');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const shareUrlEl = document.getElementById('share-url');
+        const copyUrlBtn = document.getElementById('copy-url');
+        
+        // Game screens
+        const waitingScreenEl = document.getElementById('waiting-screen');
+        const chooseTypeScreenEl = document.getElementById('choose-type-screen');
+        const questionScreenEl = document.getElementById('question-screen');
+        const waitingTurnScreenEl = document.getElementById('waiting-turn-screen');
+        const currentPlayerNameEl = document.getElementById('current-player-name');
+        
+        // Question screen elements
+        const questionTypeEl = document.getElementById('question-type-badge');
+        const questionTextEl = document.getElementById('question-text');
+        const myTurnControlsEl = document.getElementById('my-turn-controls');
+        const otherTurnInfoEl = document.getElementById('other-turn-info');
+        
+        // Buttons
+        const truthBtn = document.getElementById('truth-btn');
+        const dareBtn = document.getElementById('dare-btn');
+        const completeBtn = document.getElementById('complete-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        
+        // Game log
+        const gameLogEl = document.getElementById('game-log');
+        
+        // Set share URL
+        shareUrlEl.value = window.location.origin + '/tod/' + gameId;
+        
+        // Copy URL button
+        copyUrlBtn.addEventListener('click', function() {
+            shareUrlEl.select();
+            document.execCommand('copy');
+            
+            // Change button text temporarily
+            const originalText = copyUrlBtn.textContent;
+            copyUrlBtn.textContent = 'Kopyalandı!';
+            setTimeout(() => {
+                copyUrlBtn.textContent = originalText;
+            }, 2000);
+        });
+        
+        // Connect to Socket.IO
+        const socket = io();
+        
+        // Socket.IO event handlers
+        socket.on('connect', function() {
+            console.log('Connected to server');
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+        });
+        
+        socket.on('game_state', function(data) {
+            console.log('Game state received:', data);
+            
+            // Update player list
+            if (data.players && Array.isArray(data.players)) {
+                updatePlayerList(data.players);
+            }
+            
+            // Update game info
+            playerCountEl.textContent = data.current_players || 0;
+            maxPlayersEl.textContent = data.player_count || 0;
+            readyPlayersEl.textContent = data.ready_players || 0;
+            totalPlayersEl.textContent = data.current_players || 0;
+            
+            // Check if player is host
+            const currentPlayer = data.players ? data.players.find(p => p.id === playerId) : null;
+            isHost = currentPlayer && (currentPlayer.ev_sahibi || currentPlayer.is_host);
+            
+            // Update game status
+            gameStarted = data.started;
+            
+            // Update controls
+            updateControls();
+            
+            // Update game screen if game has started
+            if (gameStarted && data.current_player) {
+                updateGameScreen(data.current_player);
+            }
+        });
+        
+        socket.on('player_list_update', function(data) {
+            console.log('Player list update:', data);
+            
+            if (data.players && Array.isArray(data.players)) {
+                updatePlayerList(data.players);
+            }
+        });
+        
+        socket.on('player_joined', function(data) {
+            console.log('Player joined:', data);
+            
+            // Add log entry
+            addLogEntry(`${data.player_name} oyuna katıldı.`);
+            
+            // Update player count
+            playerCountEl.textContent = data.player_count;
+            totalPlayersEl.textContent = data.player_count;
+        });
+        
+        socket.on('player_ready_update', function(data) {
+            console.log('Player ready update:', data);
+            
+            // Update ready players count
+            readyPlayersEl.textContent = data.ready_players;
+            
+            // Add log entry
+            addLogEntry(`${data.player_name} hazır!`);
+            
+            // Refresh player list to ensure all players are properly displayed
+            socket.emit('get_game_state');
+        });
+        
+        socket.on('player_connected', function(data) {
+            console.log('Player connected:', data);
+            
+            // Add log entry
+            addLogEntry(`${data.player_name} bağlandı.`);
+            
+            // Update player status in list
+            const playerEl = document.querySelector(`.player-item[data-player-id="${data.player_id}"]`);
+            if (playerEl) {
+                playerEl.classList.remove('disconnected');
+            }
+        });
+        
+        socket.on('player_disconnected', function(data) {
+            console.log('Player disconnected:', data);
+            
+            // Add log entry
+            addLogEntry(`${data.player_name} bağlantısı kesildi.`);
+            
+            // Update player status in list
+            const playerEl = document.querySelector(`.player-item[data-player-id="${data.player_id}"]`);
+            if (playerEl) {
+                playerEl.classList.add('disconnected');
+            }
+        });
+        
+        socket.on('game_started', function(data) {
+            console.log('Game started:', data);
+            
+            // Update game status
+            gameStarted = true;
+            gameStatusEl.textContent = 'Oyun Başladı';
+            
+            // Hide controls
+            hostControlsEl.style.display = 'none';
+            
+            // Add log entry
+            addLogEntry('Oyun başladı!');
+            
+            // Update game screen
+            updateGameScreen(data.current_player);
+            
+            // Update controls
+            updateControls();
+        });
+        
+        socket.on('question_chosen', function(data) {
+            console.log('Question chosen:', data);
+            
+            // Set current question
+            currentQuestion = data.question;
+            currentQuestionType = data.question_type;
+            
+            // Update question display
+            questionTypeEl.textContent = data.question_type === 'truth' ? 'Doğruluk' : 'Cesaret';
+            questionTypeEl.className = 'badge question-type-badge ' + 
+                (data.question_type === 'truth' ? 'bg-primary' : 'bg-danger');
+            questionTextEl.textContent = data.question;
+            
+            // Show question screen
+            showScreen(questionScreenEl);
+            
+            // Show controls if it's my turn
+            if (data.player_id === playerId) {
+                myTurnControlsEl.style.display = 'block';
+                otherTurnInfoEl.style.display = 'none';
+            } else {
+                myTurnControlsEl.style.display = 'none';
+                otherTurnInfoEl.style.display = 'block';
+            }
+            
+            // Add log entry
+            const questionType = data.question_type === 'truth' ? 'Doğruluk' : 'Cesaret';
+            addLogEntry(`${data.player_name} ${questionType} seçti: "${data.question}"`);
+        });
+        
+        socket.on('turn_completed', function(data) {
+            console.log('Turn completed:', data);
+            
+            // Add log entry
+            addLogEntry(`Sıra ${data.next_player_name} oyuncusuna geçti.`);
+            
+            // Update game screen
+            updateGameScreen(data.next_player);
+        });
+        
+        socket.on('turn_skipped', function(data) {
+            console.log('Turn skipped:', data);
+            
+            // Add log entry
+            addLogEntry(`${data.player_name} pas geçti. Sıra ${data.next_player_name} oyuncusuna geçti.`);
+            
+            // Update game screen
+            updateGameScreen(data.next_player);
+        });
+        
+        socket.on('error', function(data) {
+            console.error('Error:', data);
+            alert(data.message);
+        });
+        
+        // Button event handlers
+        startGameBtn.addEventListener('click', function() {
+            socket.emit('start_game', {});
+        });
+        
+        truthBtn.addEventListener('click', function() {
+            socket.emit('choose_type', { type: 'truth' });
+        });
+        
+        dareBtn.addEventListener('click', function() {
+            socket.emit('choose_type', { type: 'dare' });
+        });
+        
+        completeBtn.addEventListener('click', function() {
+            socket.emit('complete_turn', {});
+        });
+        
+        skipBtn.addEventListener('click', function() {
+            socket.emit('skip_turn', {});
+        });
+        
+        // Helper functions
+        function updatePlayerList(players) {
+            playerListEl.innerHTML = '';
+            
+            players.forEach(player => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-item';
+                playerEl.dataset.playerId = player.id;
+                
+                if (!player.bagli && !player.connected) {
+                    playerEl.classList.add('disconnected');
+                }
+                
+                if (player.id === playerId) {
+                    playerEl.innerHTML = `<strong>${player.ad || player.name}</strong> (Sen)`;
+                } else {
+                    playerEl.textContent = player.ad || player.name;
+                }
+                
+                if (player.ev_sahibi || player.is_host) {
+                    const hostBadge = document.createElement('span');
+                    hostBadge.className = 'badge bg-warning float-end';
+                    hostBadge.textContent = 'Host';
+                    playerEl.appendChild(hostBadge);
+                }
+                
+                playerListEl.appendChild(playerEl);
+            });
+        }
+        
+        function updateGameScreen(currentPlayerId) {
+            // Update current player in list
+            const playerItems = document.querySelectorAll('.player-item');
+            playerItems.forEach(item => {
+                item.classList.remove('current');
+                if (item.dataset.playerId === currentPlayerId) {
+                    item.classList.add('current');
+                    const playerName = item.textContent.replace(' (Sen)', '').replace('Host', '').trim();
+                    if (playerName) {
+                        currentPlayerNameEl.textContent = playerName;
+                    } else {
+                        currentPlayerNameEl.textContent = 'diğer oyuncuda';
+                    }
+                }
+            });
+            
+            // Check if it's my turn
+            isMyTurn = (currentPlayerId === playerId);
+            
+            if (!gameStarted) {
+                showWaitingScreen();
+            } else if (isMyTurn) {
+                showChooseTypeScreen();
+            } else {
+                showWaitingTurnScreen();
+            }
+        }
+        
+        function showScreen(screenEl) {
+            waitingScreenEl.style.display = 'none';
+            chooseTypeScreenEl.style.display = 'none';
+            questionScreenEl.style.display = 'none';
+            waitingTurnScreenEl.style.display = 'none';
+            
+            screenEl.style.display = 'block';
+        }
+        
+        function showWaitingScreen() {
+            showScreen(waitingScreenEl);
+        }
+        
+        function showChooseTypeScreen() {
+            showScreen(chooseTypeScreenEl);
+        }
+        
+        function showWaitingTurnScreen() {
+            showScreen(waitingTurnScreenEl);
+        }
+        
+        function addLogEntry(message) {
+            const logEntry = document.createElement('div');
+            logEntry.className = 'p-2 border-bottom';
+            
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            logEntry.innerHTML = `<small class="text-muted">${timestamp}</small> ${message}`;
+            
+            // Append to log instead of replacing
+            gameLogEl.appendChild(logEntry);
+            gameLogEl.scrollTop = gameLogEl.scrollHeight;
+        }
+        
+        function updateControls() {
+            if (gameStarted) {
+                // Oyun başladıysa tüm kontrolleri gizle
+                hostControlsEl.style.display = 'none';
+                gameStatusEl.textContent = 'Oyun Başladı';
+            } else {
+                // Oyun başlamadıysa rol bazlı kontrolleri göster
+                gameStatusEl.textContent = 'Bekleniyor';
+                if (isHost) {
+                    hostControlsEl.style.display = 'block';
+                } else {
+                    hostControlsEl.style.display = 'none';
+                }
+                showWaitingScreen();
+            }
+        }
+    });
+</script>
+{% endblock %} 
