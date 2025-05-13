@@ -1,8 +1,8 @@
 # Doğruluk mu Cesaret mi? (Truth or Dare)
 
 <div align="center">
-    <h3>HYPERINGS DEV</h3>
-    <p><i>Yenilikçi Yazılım Çözümleri</i></p>
+    <h3>MİDENİUM</h3>
+    <p><i>Herkes İçin</i></p>
 </div>
 
 Bu proje, çevrimiçi olarak arkadaşlarınızla oynayabileceğiniz bir Doğruluk mu Cesaret mi oyunudur. HYPERINGS DEV çatısı altında geliştirilmiştir.
@@ -111,7 +111,7 @@ Oyundaki soruları özelleştirmek için `questions.json` dosyasını düzenleye
 
 ## Geliştirici
 
-Bu proje HYPERINGS DEV tarafından geliştirilmiştir.
+Bu proje Midenium tarafından geliştirilmiştir.
 
 ## Lisans
 
