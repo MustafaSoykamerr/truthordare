@@ -5,7 +5,7 @@
     <p><i>Herkes İçin</i></p>
 </div>
 
-Bu proje, çevrimiçi olarak arkadaşlarınızla oynayabileceğiniz bir Doğruluk mu Cesaret mi oyunudur. HYPERINGS DEV çatısı altında geliştirilmiştir.
+Bu proje, çevrimiçi olarak arkadaşlarınızla oynayabileceğiniz bir Doğruluk mu Cesaret mi oyunudur.
 
 ## Özellikler
 
